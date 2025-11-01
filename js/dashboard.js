@@ -167,11 +167,36 @@ const dashboard = {
     },
 
     updateCategoryChart(expenses) {
-        const categories = ['Grocery', 'Cosmetics', 'Clothes', 'Miscellaneous'];
-        const categoryTotals = categories.map(cat => {
+        // All possible categories
+        const allCategories = ['Rent', 'Water', 'Electricity', 'WiFi', 'Phone Bill', 'Grocery', 'Cosmetics', 'Clothes', 'Miscellaneous'];
+
+        // Calculate totals for each category
+        const categoryTotals = allCategories.map(cat => {
             return expenses
                 .filter(e => e.category === cat)
                 .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+        });
+
+        // Filter out categories with zero expenses
+        const categories = [];
+        const totals = [];
+        const colors = [
+            'rgba(37, 99, 235, 0.8)', // Blue - Rent
+            'rgba(34, 197, 94, 0.8)', // Green - Water
+            'rgba(251, 191, 36, 0.8)', // Yellow - Electricity
+            'rgba(147, 51, 234, 0.8)', // Purple - WiFi
+            'rgba(236, 72, 153, 0.8)', // Pink - Phone Bill
+            'rgba(16, 185, 129, 0.8)', // Teal - Grocery
+            'rgba(245, 158, 11, 0.8)', // Orange - Cosmetics
+            'rgba(239, 68, 68, 0.8)', // Red - Clothes
+            'rgba(100, 116, 139, 0.8)' // Gray - Miscellaneous
+        ];
+
+        allCategories.forEach((cat, index) => {
+            if (categoryTotals[index] > 0) {
+                categories.push(cat);
+                totals.push(categoryTotals[index]);
+            }
         });
 
         const ctx = document.getElementById('category-chart').getContext('2d');
@@ -180,18 +205,19 @@ const dashboard = {
             dashboard.categoryChart.destroy();
         }
 
+        // Generate colors for visible categories
+        const visibleColors = categories.map((cat, index) => {
+            const originalIndex = allCategories.indexOf(cat);
+            return colors[originalIndex] || 'rgba(100, 116, 139, 0.8)';
+        });
+
         dashboard.categoryChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: categories,
+                labels: categories.length > 0 ? categories : ['No Expenses'],
                 datasets: [{
-                    data: categoryTotals,
-                    backgroundColor: [
-                        'rgba(37, 99, 235, 0.8)',
-                        'rgba(16, 185, 129, 0.8)',
-                        'rgba(245, 158, 11, 0.8)',
-                        'rgba(239, 68, 68, 0.8)'
-                    ],
+                    data: totals.length > 0 ? totals : [1],
+                    backgroundColor: visibleColors.length > 0 ? visibleColors : ['rgba(200, 200, 200, 0.8)'],
                     borderWidth: 2,
                     borderColor: '#fff'
                 }]

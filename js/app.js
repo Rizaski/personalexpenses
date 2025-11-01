@@ -4,14 +4,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Check Firebase configuration
     if (!isFirebaseConfigured()) {
-        alert('⚠️ Firebase configuration required!\n\nPlease update js/firebase-config.js with your Firebase credentials.\n\nYou can find them in:\nFirebase Console → Project Settings → General → Your apps');
+        dialog.alert('Please update js/firebase-config.js with your Firebase credentials.\n\nYou can find them in:\nFirebase Console → Project Settings → General → Your apps', {
+            title: 'Firebase Configuration Required',
+            type: 'warning'
+        });
         return;
     }
 
     // Check if Firebase is loaded
     if (typeof firebase === 'undefined') {
         console.error('Firebase is not loaded!');
-        alert('⚠️ Firebase SDK not loaded. Please check your internet connection and try again.');
+        dialog.alert('Please check your internet connection and try again.', {
+            title: 'Firebase SDK Not Loaded',
+            type: 'error'
+        });
         return;
     }
 
@@ -62,13 +68,20 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
         console.error('Error initializing modules:', error);
         console.error('Error stack:', error.stack);
-        alert('Error initializing application. Please check the console for details.\n\nError: ' + error.message);
+        dialog.alert('Error: ' + error.message + '\n\nPlease check the console for more details.', {
+            title: 'Initialization Error',
+            type: 'error'
+        });
     }
 
     // Close modals on outside click
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('modal')) {
             e.target.classList.remove('active');
+        }
+        // Close custom dialogs on overlay click
+        if (e.target.classList.contains('custom-dialog-overlay')) {
+            dialog.closeDialog(false);
         }
     });
 

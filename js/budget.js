@@ -86,12 +86,18 @@ const budget = {
                 });
 
             budget.hideLoading();
-            alert('Budgets saved successfully!');
+            await dialog.alert('Budgets saved successfully!', {
+                title: 'Success',
+                type: 'success'
+            });
             // Real-time listener will update the UI automatically
         } catch (error) {
             console.error('Error saving budgets:', error);
             budget.hideLoading();
-            alert('Error saving budgets');
+            await dialog.alert('Error saving budgets', {
+                title: 'Error',
+                type: 'error'
+            });
         }
     },
 

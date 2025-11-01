@@ -110,8 +110,11 @@ const expenses = {
 
             const doc = await expenses.db.collection('expenses').doc(id).get();
             if (!doc.exists) {
-                alert('Expense not found');
                 expenses.hideLoading();
+                await dialog.alert('Expense not found', {
+                    title: 'Not Found',
+                    type: 'warning'
+                });
                 return;
             }
 
@@ -132,7 +135,10 @@ const expenses = {
         } catch (error) {
             console.error('Error loading expense:', error);
             expenses.hideLoading();
-            alert('Error loading expense');
+            await dialog.alert('Error loading expense', {
+                title: 'Error',
+                type: 'error'
+            });
         }
     },
 
@@ -157,7 +163,10 @@ const expenses = {
 
         if (!expenseData.date || !expenseData.merchant || !expenseData.purpose ||
             !expenseData.amount || !expenseData.category || !expenseData.purchaseBy) {
-            alert('Please fill in all fields');
+            await dialog.alert('Please fill in all fields', {
+                title: 'Validation Error',
+                type: 'warning'
+            });
             return;
         }
 
@@ -182,12 +191,19 @@ const expenses = {
         } catch (error) {
             console.error('Error saving expense:', error);
             expenses.hideLoading();
-            alert('Error saving expense');
+            await dialog.alert('Error saving expense', {
+                title: 'Error',
+                type: 'error'
+            });
         }
     },
 
     async delete(id) {
-        if (!confirm('Are you sure you want to delete this expense?')) return;
+        const confirmed = await dialog.confirm('Are you sure you want to delete this expense?', {
+            title: 'Delete Expense',
+            type: 'warning'
+        });
+        if (!confirmed) return;
 
         try {
             expenses.showLoading();
@@ -198,7 +214,10 @@ const expenses = {
         } catch (error) {
             console.error('Error deleting expense:', error);
             expenses.hideLoading();
-            alert('Error deleting expense');
+            await dialog.alert('Error deleting expense', {
+                title: 'Error',
+                type: 'error'
+            });
         }
     },
 

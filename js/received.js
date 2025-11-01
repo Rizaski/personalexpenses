@@ -109,8 +109,11 @@ const received = {
 
             const doc = await received.db.collection('received').doc(id).get();
             if (!doc.exists) {
-                alert('Received payment not found');
                 received.hideLoading();
+                await dialog.alert('Received payment not found', {
+                    title: 'Not Found',
+                    type: 'warning'
+                });
                 return;
             }
 
@@ -130,7 +133,10 @@ const received = {
         } catch (error) {
             console.error('Error loading received:', error);
             received.hideLoading();
-            alert('Error loading received payment');
+            await dialog.alert('Error loading received payment', {
+                title: 'Error',
+                type: 'error'
+            });
         }
     },
 
@@ -154,7 +160,10 @@ const received = {
 
         if (!receivedData.date || !receivedData.payer || !receivedData.project ||
             !receivedData.amount || !receivedData.paymentType) {
-            alert('Please fill in all fields');
+            await dialog.alert('Please fill in all fields', {
+                title: 'Validation Error',
+                type: 'warning'
+            });
             return;
         }
 
@@ -179,12 +188,19 @@ const received = {
         } catch (error) {
             console.error('Error saving received:', error);
             received.hideLoading();
-            alert('Error saving received payment');
+            await dialog.alert('Error saving received payment', {
+                title: 'Error',
+                type: 'error'
+            });
         }
     },
 
     async delete(id) {
-        if (!confirm('Are you sure you want to delete this received payment?')) return;
+        const confirmed = await dialog.confirm('Are you sure you want to delete this received payment?', {
+            title: 'Delete Received Payment',
+            type: 'warning'
+        });
+        if (!confirmed) return;
 
         try {
             received.showLoading();
@@ -195,7 +211,10 @@ const received = {
         } catch (error) {
             console.error('Error deleting received:', error);
             received.hideLoading();
-            alert('Error deleting received payment');
+            await dialog.alert('Error deleting received payment', {
+                title: 'Error',
+                type: 'error'
+            });
         }
     },
 

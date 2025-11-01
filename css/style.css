@@ -775,6 +775,145 @@ body {
     border-left: 4px solid var(--success-color);
 }
 
+/* Custom Dialog Styles */
+.custom-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(4px);
+    padding: var(--spacing-lg);
+}
+
+.custom-dialog-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.custom-dialog {
+    background: var(--card-bg);
+    border-radius: var(--border-radius-xl);
+    width: 100%;
+    max-width: 420px;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+}
+
+.custom-dialog-overlay.active .custom-dialog {
+    transform: translateY(0);
+}
+
+.custom-dialog-header {
+    padding: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.custom-dialog-header svg {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.custom-dialog-header.info svg {
+    color: var(--primary-color);
+}
+
+.custom-dialog-header.success svg {
+    color: var(--success-color);
+}
+
+.custom-dialog-header.warning svg {
+    color: var(--warning-color);
+}
+
+.custom-dialog-header.error svg {
+    color: var(--danger-color);
+}
+
+.custom-dialog-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.custom-dialog-body {
+    padding: var(--spacing-lg);
+}
+
+.custom-dialog-body p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.custom-dialog-input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background-color: var(--card-bg);
+    font-family: inherit;
+}
+
+.custom-dialog-input:hover {
+    border-color: var(--primary-light);
+}
+
+.custom-dialog-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.custom-dialog-footer {
+    padding: var(--spacing-lg);
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+    border-top: 1px solid var(--border-color);
+}
+
+.custom-dialog-btn {
+    min-width: 100px;
+}
+
+.custom-dialog-prompt {
+    max-width: 480px;
+}
+
+@media (max-width: 480px) {
+    .custom-dialog {
+        max-width: 100%;
+        margin: var(--spacing-md);
+    }
+
+    .custom-dialog-footer {
+        flex-direction: column-reverse;
+    }
+
+    .custom-dialog-btn {
+        width: 100%;
+    }
+}
+
 /* Smooth Transitions */
 * {
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;

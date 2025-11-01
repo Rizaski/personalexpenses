@@ -150,11 +150,32 @@
                     <form id="expense-form">
                         <input type="hidden" id="expense-id">
                         <input type="date" id="expense-date" required>
-                        <input type="text" id="expense-merchant" placeholder="Merchant" required>
+                        <select id="expense-merchant" required>
+                            <option value="">Select Merchant</option>
+                            <option value="Rent-Landlord">Rent-Landlord</option>
+                            <option value="MWSC">MWSC</option>
+                            <option value="STELCO">STELCO</option>
+                            <option value="Dhiraagu">Dhiraagu</option>
+                            <option value="Ooredoo">Ooredoo</option>
+                            <option value="VB Mart">VB Mart</option>
+                            <option value="MHA Mart">MHA Mart</option>
+                            <option value="Zamy Mart">Zamy Mart</option>
+                            <option value="Day Night Mart">Day Night Mart</option>
+                            <option value="RedWave">RedWave</option>
+                            <option value="Fresh Ice">Fresh Ice</option>
+                            <option value="Your Choice">Your Choice</option>
+                            <option value="Red Banana">Red Banana</option>
+                            <option value="Others">Others</option>
+                        </select>
                         <input type="text" id="expense-purpose" placeholder="Purpose" required>
                         <input type="number" id="expense-amount" placeholder="Amount (MVR)" step="0.01" min="0" required>
                         <select id="expense-category" required>
                             <option value="">Select Category</option>
+                            <option value="Rent">Rent</option>
+                            <option value="Water">Water</option>
+                            <option value="Electricity">Electricity</option>
+                            <option value="WiFi">WiFi</option>
+                            <option value="Phone Bill">Phone Bill</option>
                             <option value="Grocery">Grocery</option>
                             <option value="Cosmetics">Cosmetics</option>
                             <option value="Clothes">Clothes</option>
@@ -292,6 +313,7 @@
     </div>
 
     <script src="js/firebase-config.js"></script>
+    <script src="js/dialog.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/router.js"></script>
     <script src="js/dashboard.js"></script>

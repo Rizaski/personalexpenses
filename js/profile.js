@@ -58,7 +58,10 @@ const profile = {
         };
 
         if (!profileData.name || !profileData.email || !profileData.mobile) {
-            alert('Please fill in all fields');
+            await dialog.alert('Please fill in all fields', {
+                title: 'Validation Error',
+                type: 'warning'
+            });
             return;
         }
 
@@ -80,11 +83,17 @@ const profile = {
 
             profile.userData = profileData;
             profile.hideLoading();
-            alert('Profile updated successfully!');
+            await dialog.alert('Profile updated successfully!', {
+                title: 'Success',
+                type: 'success'
+            });
         } catch (error) {
             console.error('Error updating profile:', error);
             profile.hideLoading();
-            alert('Error updating profile: ' + (error.message || 'Unknown error'));
+            await dialog.alert('Error: ' + (error.message || 'Unknown error'), {
+                title: 'Error Updating Profile',
+                type: 'error'
+            });
         }
     },
 
@@ -96,17 +105,26 @@ const profile = {
         const confirmPassword = document.getElementById('confirm-password').value;
 
         if (!oldPassword || !newPassword || !confirmPassword) {
-            alert('Please fill in all fields');
+            await dialog.alert('Please fill in all fields', {
+                title: 'Validation Error',
+                type: 'warning'
+            });
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            alert('New passwords do not match');
+            await dialog.alert('New passwords do not match', {
+                title: 'Validation Error',
+                type: 'warning'
+            });
             return;
         }
 
         if (newPassword.length < 6) {
-            alert('Password must be at least 6 characters');
+            await dialog.alert('Password must be at least 6 characters', {
+                title: 'Validation Error',
+                type: 'warning'
+            });
             return;
         }
 
@@ -128,7 +146,10 @@ const profile = {
             document.getElementById('password-form').reset();
 
             profile.hideLoading();
-            alert('Password changed successfully!');
+            await dialog.alert('Password changed successfully!', {
+                title: 'Success',
+                type: 'success'
+            });
         } catch (error) {
             console.error('Error changing password:', error);
             profile.hideLoading();
@@ -142,7 +163,10 @@ const profile = {
                 errorMessage = error.message;
             }
 
-            alert(errorMessage);
+            await dialog.alert(errorMessage, {
+                title: 'Error Changing Password',
+                type: 'error'
+            });
         }
     },
 

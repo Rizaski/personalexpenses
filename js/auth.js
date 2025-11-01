@@ -236,7 +236,12 @@ const auth = {
     },
 
     async logout() {
-        if (confirm('Are you sure you want to logout?')) {
+        const confirmed = await dialog.confirm('Are you sure you want to logout?', {
+            title: 'Confirm Logout',
+            type: 'warning'
+        });
+
+        if (confirmed) {
             try {
                 await auth.auth.signOut();
             } catch (error) {
@@ -301,9 +306,15 @@ window.createTestAccount = async function(email, password, name, mobile) {
         console.log('Email:', email);
         console.log('Password:', password);
         console.log('You can now login with these credentials.');
-        alert('Test account created! You can now login.\n\nEmail: ' + email + '\nPassword: ' + password);
+        dialog.alert('Email: ' + email + '\nPassword: ' + password, {
+            title: 'Test Account Created',
+            type: 'success'
+        });
     } catch (error) {
         console.error('Error creating test account:', error);
-        alert('Error: ' + error.message);
+        dialog.alert('Error: ' + error.message, {
+            title: 'Error Creating Account',
+            type: 'error'
+        });
     }
 };
