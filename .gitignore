@@ -1,0 +1,33 @@
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Firebase
+.firebase/
+firebase-debug.log
+
+# Environment
+.env
+.env.local
+
+# Build files
+dist/
+build/
+
+# Node modules (if using npm for deployment)
+node_modules/
+
+# Don't ignore config file (but do note it needs to be configured)
+# js/firebase-config.js
