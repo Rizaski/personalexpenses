@@ -14,25 +14,45 @@ const expenses = {
         expenses.stopRealTimeListeners();
 
         // Set up real-time listener for expenses
-        expenses.unsubscribe = expenses.db
-            .collection('expenses')
-            .where('userId', '==', auth.currentUser.uid)
-            .orderBy('date', 'desc')
-            .onSnapshot((snapshot) => {
-                const expensesList = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+        try {
+            expenses.unsubscribe = expenses.db
+                .collection('expenses')
+                .where('userId', '==', auth.currentUser.uid)
+                .orderBy('date', 'desc')
+                .onSnapshot((snapshot) => {
+                    const expensesList = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
 
-                expenses.render(expensesList);
+                    console.log('Expenses loaded:', expensesList.length);
+                    expenses.render(expensesList);
 
-                // Refresh dashboard when expenses change
-                if (window.dashboard && router.currentView === 'dashboard') {
-                    dashboard.refresh();
-                }
-            }, (error) => {
-                console.error('Error in expenses listener:', error);
-            });
+                    // Refresh dashboard when expenses change
+                    if (window.dashboard && router.currentView === 'dashboard') {
+                        dashboard.refresh();
+                    }
+                }, (error) => {
+                    console.error('Error in expenses listener:', error);
+                    if (error.code === 'failed-precondition') {
+                        console.error('Index required. Please create the composite index in Firebase Console.');
+                        dialog.alert('Database index required. Click the link in the console to create it, or create it manually in Firebase Console → Firestore → Indexes.', {
+                            title: 'Index Required',
+                            type: 'warning'
+                        });
+                    } else {
+                        dialog.alert('Error loading expenses: ' + error.message, {
+                            title: 'Error',
+                            type: 'error'
+                        });
+                    }
+                    // Fallback: Load without ordering
+                    expenses.loadWithoutOrderBy();
+                });
+        } catch (error) {
+            console.error('Error setting up expenses listener:', error);
+            expenses.loadWithoutOrderBy();
+        }
     },
 
     stopRealTimeListeners() {
@@ -59,11 +79,58 @@ const expenses = {
                 ...doc.data()
             }));
 
+            console.log('Expenses loaded:', expensesList.length);
             expenses.render(expensesList);
             expenses.hideLoading();
         } catch (error) {
             console.error('Error loading expenses:', error);
             expenses.hideLoading();
+
+            if (error.code === 'failed-precondition') {
+                await dialog.alert('Database index required. Please create the composite index in Firebase Console → Firestore → Indexes.', {
+                    title: 'Index Required',
+                    type: 'warning'
+                });
+                // Fallback: Load without ordering
+                await expenses.loadWithoutOrderBy();
+            } else {
+                await dialog.alert('Error loading expenses: ' + error.message, {
+                    title: 'Error',
+                    type: 'error'
+                });
+            }
+        }
+    },
+
+    async loadWithoutOrderBy() {
+        if (!auth.currentUser) return;
+
+        try {
+            console.log('Loading expenses without orderBy...');
+            const snapshot = await expenses.db
+                .collection('expenses')
+                .where('userId', '==', auth.currentUser.uid)
+                .get();
+
+            const expensesList = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            // Sort client-side
+            expensesList.sort((a, b) => {
+                const dateA = a.date || '';
+                const dateB = b.date || '';
+                return dateB.localeCompare(dateA);
+            });
+
+            expenses.render(expensesList);
+        } catch (error) {
+            console.error('Error loading expenses without orderBy:', error);
+            await dialog.alert('Error loading expenses: ' + error.message, {
+                title: 'Error',
+                type: 'error'
+            });
         }
     },
 
@@ -176,23 +243,45 @@ const expenses = {
             if (id) {
                 // Update existing
                 await expenses.db.collection('expenses').doc(id).update(expenseData);
+                console.log('Expense updated:', id);
             } else {
                 // Create new with unique ID
                 expenseData.uniqueId = 'EXP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
                 expenseData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                await expenses.db.collection('expenses').doc().set(expenseData);
+                const docRef = expenses.db.collection('expenses').doc();
+                await docRef.set(expenseData);
+                console.log('Expense created:', docRef.id);
             }
 
             expenses.closeModal();
+
+            // Show success message
+            await dialog.alert(id ? 'Expense updated successfully!' : 'Expense added successfully!', {
+                title: 'Success',
+                type: 'success'
+            });
+
             // Real-time listener will update the list automatically
             if (window.dashboard) dashboard.refresh();
 
             expenses.hideLoading();
         } catch (error) {
             console.error('Error saving expense:', error);
+            console.error('Error code:', error.code);
+            console.error('Error message:', error.message);
             expenses.hideLoading();
-            await dialog.alert('Error saving expense', {
-                title: 'Error',
+
+            let errorMessage = 'Error saving expense';
+            if (error.code === 'permission-denied') {
+                errorMessage = 'Permission denied. Please check Firestore security rules.';
+            } else if (error.code === 'unavailable') {
+                errorMessage = 'Firestore is temporarily unavailable. Please try again.';
+            } else if (error.message) {
+                errorMessage = 'Error: ' + error.message;
+            }
+
+            await dialog.alert(errorMessage, {
+                title: 'Error Saving Expense',
                 type: 'error'
             });
         }

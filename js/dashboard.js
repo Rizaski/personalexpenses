@@ -46,29 +46,81 @@ const dashboard = {
     },
 
     async loadExpenses() {
-        const snapshot = await dashboard.db
-            .collection('expenses')
-            .where('userId', '==', auth.currentUser.uid)
-            .orderBy('date', 'desc')
-            .get();
+        try {
+            const snapshot = await dashboard.db
+                .collection('expenses')
+                .where('userId', '==', auth.currentUser.uid)
+                .orderBy('date', 'desc')
+                .get();
 
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+        } catch (error) {
+            console.error('Error loading expenses for dashboard:', error);
+            if (error.code === 'failed-precondition') {
+                // Fallback: Load without ordering
+                const snapshot = await dashboard.db
+                    .collection('expenses')
+                    .where('userId', '==', auth.currentUser.uid)
+                    .get();
+
+                const expenses = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                // Sort client-side
+                expenses.sort((a, b) => {
+                    const dateA = a.date || '';
+                    const dateB = b.date || '';
+                    return dateB.localeCompare(dateA);
+                });
+
+                return expenses;
+            }
+            throw error;
+        }
     },
 
     async loadReceived() {
-        const snapshot = await dashboard.db
-            .collection('received')
-            .where('userId', '==', auth.currentUser.uid)
-            .orderBy('date', 'desc')
-            .get();
+        try {
+            const snapshot = await dashboard.db
+                .collection('received')
+                .where('userId', '==', auth.currentUser.uid)
+                .orderBy('date', 'desc')
+                .get();
 
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+        } catch (error) {
+            console.error('Error loading received for dashboard:', error);
+            if (error.code === 'failed-precondition') {
+                // Fallback: Load without ordering
+                const snapshot = await dashboard.db
+                    .collection('received')
+                    .where('userId', '==', auth.currentUser.uid)
+                    .get();
+
+                const received = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                // Sort client-side
+                received.sort((a, b) => {
+                    const dateA = a.date || '';
+                    const dateB = b.date || '';
+                    return dateB.localeCompare(dateA);
+                });
+
+                return received;
+            }
+            throw error;
+        }
     },
 
     async loadBudgets() {

@@ -14,25 +14,40 @@ const received = {
         received.stopRealTimeListeners();
 
         // Set up real-time listener for received payments
-        received.unsubscribe = received.db
-            .collection('received')
-            .where('userId', '==', auth.currentUser.uid)
-            .orderBy('date', 'desc')
-            .onSnapshot((snapshot) => {
-                const receivedList = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+        try {
+            received.unsubscribe = received.db
+                .collection('received')
+                .where('userId', '==', auth.currentUser.uid)
+                .orderBy('date', 'desc')
+                .onSnapshot((snapshot) => {
+                    const receivedList = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
 
-                received.render(receivedList);
+                    console.log('Received loaded:', receivedList.length);
+                    received.render(receivedList);
 
-                // Refresh dashboard when received changes
-                if (window.dashboard && router.currentView === 'dashboard') {
-                    dashboard.refresh();
-                }
-            }, (error) => {
-                console.error('Error in received listener:', error);
-            });
+                    // Refresh dashboard when received changes
+                    if (window.dashboard && router.currentView === 'dashboard') {
+                        dashboard.refresh();
+                    }
+                }, (error) => {
+                    console.error('Error in received listener:', error);
+                    if (error.code === 'failed-precondition') {
+                        console.error('Index required. Please create the composite index in Firebase Console.');
+                        dialog.alert('Database index required. Click the link in the console to create it, or create it manually in Firebase Console → Firestore → Indexes.', {
+                            title: 'Index Required',
+                            type: 'warning'
+                        });
+                    }
+                    // Fallback: Load without ordering
+                    received.loadWithoutOrderBy();
+                });
+        } catch (error) {
+            console.error('Error setting up received listener:', error);
+            received.loadWithoutOrderBy();
+        }
     },
 
     stopRealTimeListeners() {
@@ -59,11 +74,57 @@ const received = {
                 ...doc.data()
             }));
 
+            console.log('Received loaded:', receivedList.length);
             received.render(receivedList);
             received.hideLoading();
         } catch (error) {
             console.error('Error loading received:', error);
             received.hideLoading();
+
+            if (error.code === 'failed-precondition') {
+                await dialog.alert('Database index required. Please create the composite index in Firebase Console → Firestore → Indexes.', {
+                    title: 'Index Required',
+                    type: 'warning'
+                });
+                await received.loadWithoutOrderBy();
+            } else {
+                await dialog.alert('Error loading received: ' + error.message, {
+                    title: 'Error',
+                    type: 'error'
+                });
+            }
+        }
+    },
+
+    async loadWithoutOrderBy() {
+        if (!auth.currentUser) return;
+
+        try {
+            console.log('Loading received without orderBy...');
+            const snapshot = await received.db
+                .collection('received')
+                .where('userId', '==', auth.currentUser.uid)
+                .get();
+
+            const receivedList = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            // Sort client-side
+            receivedList.sort((a, b) => {
+                const dateA = a.date || '';
+                const dateB = b.date || '';
+                return dateB.localeCompare(dateA);
+            });
+
+            received.render(receivedList);
+        } catch (error) {
+            console.error('Error loading received without orderBy:', error);
+            await dialog.alert('Error loading received: ' + error.message, {
+                title: 'Error',
+                type: 'error'
+            });
         }
     },
 
@@ -158,6 +219,8 @@ const received = {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
+        console.log('Saving received:', receivedData);
+
         if (!receivedData.date || !receivedData.payer || !receivedData.project ||
             !receivedData.amount || !receivedData.paymentType) {
             await dialog.alert('Please fill in all fields', {
@@ -173,23 +236,45 @@ const received = {
             if (id) {
                 // Update existing
                 await received.db.collection('received').doc(id).update(receivedData);
+                console.log('Received updated:', id);
             } else {
                 // Create new with unique ID
                 receivedData.uniqueId = 'REC-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
                 receivedData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                await received.db.collection('received').doc().set(receivedData);
+                const docRef = received.db.collection('received').doc();
+                await docRef.set(receivedData);
+                console.log('Received created:', docRef.id);
             }
 
             received.closeModal();
+
+            // Show success message
+            await dialog.alert(id ? 'Received payment updated successfully!' : 'Received payment added successfully!', {
+                title: 'Success',
+                type: 'success'
+            });
+
             // Real-time listener will update the list automatically
             if (window.dashboard) dashboard.refresh();
 
             received.hideLoading();
         } catch (error) {
             console.error('Error saving received:', error);
+            console.error('Error code:', error.code);
+            console.error('Error message:', error.message);
             received.hideLoading();
-            await dialog.alert('Error saving received payment', {
-                title: 'Error',
+
+            let errorMessage = 'Error saving received payment';
+            if (error.code === 'permission-denied') {
+                errorMessage = 'Permission denied. Please check Firestore security rules.';
+            } else if (error.code === 'unavailable') {
+                errorMessage = 'Firestore is temporarily unavailable. Please try again.';
+            } else if (error.message) {
+                errorMessage = 'Error: ' + error.message;
+            }
+
+            await dialog.alert(errorMessage, {
+                title: 'Error Saving Received Payment',
                 type: 'error'
             });
         }
